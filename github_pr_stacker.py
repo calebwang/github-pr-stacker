@@ -29,8 +29,13 @@ class GitHubStackedPRManager:
             self.push(branch)
     
     def show_ref(self, branch):
+<<<<<<< HEAD
         result = subprocess.run(["git", "show-ref", branch], capture_output=True, text=True)
         return result.stdout.split()[0]
+=======
+        result = subprocess.run(["git", "show-ref", "branch"], capture_output=True, text=True)
+        return result.split()[0]
+>>>>>>> 1d8c12b (Code to rebase stack)
 
     def get_current_user_username(self):
         return self.github.get_user().login
@@ -101,7 +106,10 @@ class GitHubStackedPRManager:
                 changed_branch = branch
                 break
 
+<<<<<<< HEAD
         print("xcxc", changed_branch)
+=======
+>>>>>>> 1d8c12b (Code to rebase stack)
         self.push(changed_branch)
         idx = self.branches.index(changed_branch)
         for i in range(idx + 1, len(self.branches)):
