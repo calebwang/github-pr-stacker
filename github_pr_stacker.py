@@ -13,6 +13,21 @@ class GitHubStackedPRManager:
         self.branch_prefix = self.get_branch_prefix()
         self.branches = self.list_branches()
 
+        self.fetch()
+
+        self.pulls = self.fetch_prs(self.branches)
+
+    def fetch(self):
+        subprocess.run(["git", "fetch"])
+    
+    def push(self, branch):
+        subprocess.run(["git", "checkout", branch], text=True)
+        subprocess.run(["git", "push", "-u", "origin", branch], text=True)
+
+    def push_all(self, branches):
+        for branch in branches:
+            self.push(branch)
+
     def get_current_user_username(self):
         return self.github.get_user().login
 
@@ -28,7 +43,17 @@ class GitHubStackedPRManager:
         return match.group(1) if match else current_branch
     
     def get_pr(self, branch_name, state="open"):
-        return self.repo.get_pulls(state=state, head=f"{self.get_current_user_username()}:{branch_name}")
+        results = list(self.repo.get_pulls(state="all", head=f"{self.get_current_user_username()}:{branch_name}"))
+        result = results[0] if results else None
+        if result:
+            print(f"Identified PR {result.number} for {branch_name}")
+        return result
+    
+    def fetch_prs(self, branches):
+        return {
+            branch: self.get_pr(branch)
+            for branch in branches
+        }
 
     def list_branches(self):
         """Retrieve and sort all branches that match the naming convention."""
