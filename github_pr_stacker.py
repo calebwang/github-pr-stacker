@@ -19,7 +19,7 @@ class GitHubStackedPRManager:
 
     def fetch(self):
         subprocess.run(["git", "fetch"])
-    
+
     def push(self, branch):
         subprocess.run(["git", "checkout", branch], text=True)
         subprocess.run(["git", "push", "-u", "origin", branch], text=True)
@@ -27,7 +27,7 @@ class GitHubStackedPRManager:
     def push_all(self, branches):
         for branch in branches:
             self.push(branch)
-    
+
     def show_ref(self, branch):
         result = subprocess.run(["git", "show-ref", branch], capture_output=True, text=True)
         return result.stdout.split()[0]
@@ -45,14 +45,14 @@ class GitHubStackedPRManager:
         current_branch = self.get_current_branch()
         match = re.match(r"(.*)(-[0-9]+)", current_branch)
         return match.group(1) if match else current_branch
-    
+
     def get_pr(self, branch_name, state="open"):
         results = list(self.repo.get_pulls(state="all", head=f"{self.get_current_user_username()}:{branch_name}"))
         result = results[0] if results else None
         if result:
             print(f"Identified PR {result.number} for {branch_name}")
         return result
-    
+
     def fetch_prs(self, branches):
         return {
             branch: self.get_pr(branch)
@@ -110,7 +110,7 @@ class GitHubStackedPRManager:
     def handle_merge_to_master(self):
         """Detect merges to master and propagate them back upstream."""
         master = self.repo.get_branch("master")
-        
+
         # If the current master commit is not in the latest branch, propagate the merge
         if master.commit not in [self.repo.get_branch(branch).commit for branch in self.branches]:
             for i in range(len(self.branches) - 1, 0, -1):
