@@ -27,6 +27,10 @@ class GitHubStackedPRManager:
     def push_all(self, branches):
         for branch in branches:
             self.push(branch)
+    
+    def show_ref(self, branch):
+        result = subprocess.run(["git", "show-ref", "branch"], capture_output=True, text=True)
+        return result.split()[0]
 
     def get_current_user_username(self):
         return self.github.get_user().login
@@ -81,7 +85,6 @@ class GitHubStackedPRManager:
             head = branches[i + 1]
             if not self.pulls[head]:
                 self.pulls[head] = self.create_pr(base, head, title=f"Merge {head} into {base}")
-        
 
     def rebase_branch(self, branch, onto_branch):
         """Rebase a branch onto another and force push changes."""
@@ -90,10 +93,18 @@ class GitHubStackedPRManager:
         subprocess.run(["git", "rebase", onto_branch])
         subprocess.run(["git", "push", "--force", "origin", branch])
 
-    def rebase_stack(self):
+    def update_stack(self):
         """Rebase each branch in the stack based on the previous branch."""
-        for i in range(1, len(self.branches)):
-            self.rebase_branch(self.branches[i], self.branches[i-1])
+        self.fetch()
+        for branch in self.branches:
+            if self.show_ref(branch) != self.show_ref(f"origin/{branch}"):
+                changed_branch = branch
+                break
+
+        self.push(changed_branch)
+        idx = self.branches.index(changed_branch)
+        for i in range(idx + 1, len(self.branches)):
+            self.rebase_branch(self.branches[i], changed_branch)
 
     def handle_merge_to_master(self):
         """Detect merges to master and propagate them back upstream."""
